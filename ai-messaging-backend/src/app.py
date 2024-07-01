@@ -1,10 +1,13 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from src.database import get_db
-from src.agents import get_agents, add_agent
+from src.ai_agent import get_ai_response
+import logging
 
 app = Flask(__name__)
 CORS(app)
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
 
 @app.route('/')
 def hello():
@@ -15,9 +18,15 @@ def chat():
     data = request.json
     user_message = data.get('message')
     
-    # Here you would typically process the message and get a response from your AI agent
-    # For now, we'll just echo the message back
-    ai_response = f"I received your message: {user_message}"
+    logging.info(f"Received user message: {user_message}")
+    
+    # Get response from AI agent
+    try:
+        ai_response = get_ai_response(user_message)
+        logging.info(f"AI response: {ai_response}")
+    except Exception as e:
+        logging.error(f"Error getting AI response: {str(e)}", exc_info=True)
+        ai_response = "Sorry, I encountered an error while processing your message."
     
     return jsonify({"response": ai_response})
 
