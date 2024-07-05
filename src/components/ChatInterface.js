@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState([]);
@@ -20,13 +23,43 @@ const ChatInterface = () => {
     }
   };
 
+  const MarkdownRenderer = ({ content }) => (
+    <ReactMarkdown
+      components={{
+        code({ node, inline, className, children, ...props }) {
+          const match = /language-(\w+)/.exec(className || '');
+          return !inline && match ? (
+            <SyntaxHighlighter
+              style={vscDarkPlus}
+              language={match[1]}
+              PreTag="div"
+              {...props}
+            >
+              {String(children).replace(/\n$/, '')}
+            </SyntaxHighlighter>
+          ) : (
+            <code className={className} {...props}>
+              {children}
+            </code>
+          );
+        },
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+
   return (
     <div className="flex-1 flex flex-col">
       {/* Chat Messages */}
       <div className="flex-1 bg-white p-4 overflow-y-auto">
         {messages.map((message, index) => (
           <div key={index} className={`mb-4 p-2 rounded-lg ${message.sender === 'user' ? 'bg-blue-100' : 'bg-green-100'}`}>
-            {message.text}
+            {message.sender === 'user' ? (
+              message.text
+            ) : (
+              <MarkdownRenderer content={message.text} />
+            )}
           </div>
         ))}
       </div>
